@@ -93,11 +93,11 @@ if __name__ == '__main__':
     #                      a)
     #     dl_list.clear()
     # tr.close()
-    tr.create_table('登录')
-    tr.write_head(head_list)
-    dl_list = [1,2,3,4]
-    tr.write_content(dl_list,
-                     'pass',
-                     1)
-    tr.close()
+    # tr.create_table('登录')
+    # tr.write_head(head_list)
+    # dl_list = [1,2,3,4]
+    # tr.write_content(dl_list,
+    #                  'pass',
+    #                  1)
+    # tr.close()
 

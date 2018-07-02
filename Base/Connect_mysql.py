@@ -37,6 +37,7 @@ class ConnectMysql(object):
     def commitDB(self):
         self.mysql_connect.commit()
 
+
 if __name__ == '__main__':
     Cndb=ConnectMysql()
     sql = "SELECT *, mt.content FROM sys_sms_mt mt WHERE mt.mobile = 15173125421;"

@@ -156,7 +156,10 @@ class WebBaseDriver(object):
         '''进入新窗口页面'''
         current_handle = self.driver.current_window_handle
         ele = self.get_element(selector)
-        ele.click()
+        try:
+            ele.click()
+        except Exception:
+            pass
         all_handles = self.driver.window_handles
         for handle in all_handles:
             if handle != current_handle:

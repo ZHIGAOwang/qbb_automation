@@ -3,7 +3,7 @@ from Base import Connect_mysql, get_date
 
 Cndb = Connect_mysql.ConnectMysql()
 #连接数据库 （1-测试，2-准生产）
-connect = 2
+connect = 1
 #标的类型配置
 #1.借款方式(1-直投式，2-债权式)
 tran_type = 1
@@ -14,19 +14,19 @@ inteaccr_type = 2
 #4.供应商代码
 bid_code = '014'
 #5.借款项目类型->注意bid_code与item_type的关系，查询code_operative表
-item_type = '42'
+item_type = '41'
 #6.借款人姓名 测试企借-275044 个人-311171 |准生产 存管个人-380455 企业-380450 托管-270001qbb  132qbb
 if connect == 1:
-    borrow_username = '311171qbb'
-    name = '测一云'
+    borrow_username = '333382qbb'
+    name = '依依'
 elif connect == 2:
-    borrow_username = '426385qbb'
-    name = '准一云'
+    borrow_username = '333382qbb'
+    name = '兮兮'
 #7.借款金额
-borrow_money = 10000
+borrow_money = 200000
 #8.借款期限 D-借款期限为[天]选择此项 M-借款期限为[月]时选择此项
 limit_type = 'M'
-borrow_limit = 9
+borrow_limit = 5
 limit_day = 1
 #9。借款开始时间与结束时间
 begin_date = get_date.today()

@@ -12,32 +12,33 @@ def qbb_test():
     driver.maximize_window()
     pa_qb = Qbb_Pafront(driver)
     qd = Qbb_Front(driver)
-    user_name = '333384qbb'
+    user_name = '382326qbb'
     user_pwd = '654321'
-    investment_hj = 'pre'  # 投资环境，pre=准生产，test=测试
-    money = 200             # 金额（投资，充值提现）
-    phone = 18333384123     # 手机号码
+    user_type = '2'
+    investment_hj = 'test'  # 投资环境，pre=准生产，test=测试
+    money = 5000         # 金额（投资，充值提现）
+    phone = qd.get_basics.random_phone()     # 手机号码
+    rg_pwd = 'a1234567'
     card = 6226602900000009  # 银行卡号
-    bid = 20180509000359    # 标的号
+    bid = 20180628000011    # 标的号
     pa_ts_pwd = 'a12345'  # 存管交易密码，默认a12345
-    if_new = 'new'  # 是否新用户，除了new都是老用户（如果是新用户的话就会操作一些新用户的操作）
     success = 'pass'   # 成功还是失败，除了pass都是失败
-    qd.login(QBB_URL, user_name, user_pwd)  # 这里是用户
+    # qd.login(QBB_URL, user_name, user_pwd)  # 这里是用户
     bank = '中国光大银行'
     ########################################### 非存管功能
     # recharge / if_new='new'，就会进行风险测评操作
-    # qd.recharge(money, success, if_new, bank_card=card)
+    qd.recharge(money, success, bank_card=card)
     # qd.withdraw(1, money, '654321', success)
-    # qd.qbb_register_tzr(phone, 'test', 'a1234567', 'a1234567')
+    # qd.qbb_register_tzr(QBB_URL, phone, rg_pwd, rg_pwd)
     # qd.bid_investment(money, investment_hj, '654321', bid=bid)
     # qd.new_user()
     # qd.invest_read()
     ##########################################  存管功能
-    pa_qb.pa_account(card, bank, phone, pa_ts_pwd)
+    # pa_qb.pa_account(card, bank, phone, pa_ts_pwd)
     # pa_recharge / if_new='new'，就会进行风险测评操作,并且添加pa快捷充值银行卡
-    # pa_qb.pa_recharge(money, pa_ts_pwd, success, if_new=if_new)
+    # pa_qb.pa_recharge(money, pa_ts_pwd, success)
     # pa_qb.pa_withdraw(money, pa_ts_pwd, phone, success)
-    # pa_qb.pa_bid_investment(money, investment_hj, phone, pa_ts_pwd, bid=bid)
+    # pa_qb.pa_bid_investment(money, investment_hj, pa_ts_pwd, bid=bid)
 
     driver.sleep(10)
     driver.quit_browser()
@@ -55,18 +56,17 @@ def zts_test():
 
 def get_pa_yzm():
     qb = Basics()
-    user_id = 426420               # 通过user_id获取平安验证码
-    jh = 'pre'
+    user_id = 381836              # 通过user_id获取平安验证码
+    jh = 'test'
     phone = qb.get_pa_phone(jh, user_id)
     line = qb.get_yzm(phone)
     print(line)
 
 
 if __name__ == '__main__':
-    # qbb_test()
+    qbb_test()
     # zts_test()
-    get_pa_yzm()
-
+    # get_pa_yzm()
 
 
 

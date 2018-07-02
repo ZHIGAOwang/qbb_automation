@@ -1,18 +1,18 @@
 from selenium.webdriver.common.keys import Keys
 from Base.Connect_mysql import ConnectMysql
 from Base.basepage import BasePage
-from Base.web_base_driver import WebBaseDriver
+from page.Basics import Basics
 
 
 class Qbb_Front(BasePage):
+    get_basics = Basics()
+    Cn_db = ConnectMysql()
+
     MV_WDZH = 'myzh'
     XZ_YHK = 'select_card'
     BID_URL = 'https://www.qian88.com/userCenter/queryInvestmentDetail.html?paramMap.id=%d&paramMap.fristLogin=-1'
-    CS_BID_URL = 'http://192.168.10.32:8081/userCenter/queryInvestmentDetail.html?paramMap.id=%d&paramMap.fristLogin=-1'
+    CS_BID_URL = 'http://192.168.10.31:8080/userCenter/queryInvestmentDetail.html?paramMap.id=%d&paramMap.fristLogin=-1'
     PRO_BID_URL = 'http://192.168.10.135:8080/userCenter/queryInvestmentDetail.html?paramMap.id=%d&paramMap.fristLogin=-1'
-    DL_URL = "https://www.qian88.com/logout.html"
-    sql = 'SELECT reserve from sys_sms_mt mt WHERE mt.mobile =%d ORDER BY create_time DESC LIMIT 1;'
-    Cn_db = ConnectMysql()
 ###########################
     C_RG = 'l,立即注册'
     USER_PHONE = 'u_phone'
@@ -60,32 +60,31 @@ class Qbb_Front(BasePage):
     TZLB = 'x,/html/body/div[7]/div[4]/div/div[2]/div[%d]/div[1]/a'
     C_TSS = 'checkbox'
     C_LJCJ = 'btn_save btn'
+    C_LJCP = 'isToFxTest'
     C_CJJL = 'l,查看我的出借记录'
 
-    def qbb_register_tzr(self, user_phone, database, user_pwd, user_repwd, bm=1836):
+    def qbb_register_tzr(self, url, user_phone, user_pwd, user_repwd, bm=1836):
         """
         投资人注册
+        :param url: 注册网址
         :param user_phone:注册手机号码
-        :param database:注册的数据库pre=准生产，test=测试
         :param user_pwd:注册密码
         :param user_repwd:确认注册密码
         :param bm:服务编码
         :return:
         """
         driver = self.basepage
+        driver.navigate(url)
         try:
             driver.click(self.C_RG)
         except Exception:
             pass
-        driver.type(self.USER_PHONE,user_phone)
+        driver.type(self.USER_PHONE, user_phone)
         driver.click(self.C_YZM)
-        driver.click(self.C_YZM)
-        driver.type(self.YZM, 1234)
-        driver.click(self.  C_FS)
-        yzm = self.Cn_db.connect_db(database, self.sql % user_phone)
-        print(yzm[0][0])
-        self.Cn_db.disconnectDB()
-        driver.type(self.P_YZM, yzm[0][0])
+        driver.type(self.YZM, 1111)
+        driver.click(self.C_FS)
+        driver.sleep(3)
+        driver.type(self.P_YZM, self.get_basics.get_dx_yzm(self.login_hj(), user_phone))
         driver.click(self.C_GB)
         driver.click(self.PWD)
         driver.type(self.SD_PWD, user_pwd)
@@ -93,11 +92,20 @@ class Qbb_Front(BasePage):
         driver.type(self.SD_QRPWD, user_repwd)
         driver.type(self.BM, bm)
         driver.click(self.C_TK)
-        driver.click(self.C_ZC )
+        driver.click(self.C_ZC)
+        driver.sleep(1)
+        ele = driver.get_text('x,/html/body/div[4]/div/div/h2')
+        if ele == '恭喜您，注册成功啦!':
+            user_id = self.get_basics.get_user_id(self.login_hj(), user_phone=user_phone)
+            print("手机号码:%s 注册成功,user_id:%r" % (user_phone, user_id))
+            self.get_basics.new_user_update(self.login_hj(), user_id)
+            return user_id
+        else:
+            print("注册失败")
 
-    def qbb_register_jkr(self, user_phone, user_pwd, yzm):
-        driver = self.basepage
-        pass
+    # def qbb_register_jkr(self, user_phone, user_pwd, yzm):
+    #     driver = self.basepage
+    #     pass
 
     def login(self, dl_url, user_name, user_pwd):
         """
@@ -115,12 +123,11 @@ class Qbb_Front(BasePage):
         driver.sleep(2)
         driver.navigate(dl_url.split('/l')[0])
 
-    def recharge(self, money, result, user_no='old',  bank_card=0):
+    def recharge(self, money, result,  bank_card=0):
         """
         普通充值
         :param money: 充值金额
         :param result: 充值结果
-        :param user_no: 是否是新用户
         :param bank_card: 充值银行卡
         :return:
         """
@@ -128,8 +135,17 @@ class Qbb_Front(BasePage):
         driver.driver.refresh()
         driver.move_to(self.MV_WDZH)
         driver.click(self.C_LJCZ)
-        if user_no == 'new':
-            self.new_user()
+        user_id = self.login_id()
+        evaluation = self.get_basics.judge_user(self.login_hj(), user_id)
+        user_type = self.get_basics.get_user_class(self.login_hj(), user_id)
+        if evaluation[1] == 0:
+            if user_type == '2':
+                self.vip_approve(user_id)
+            elif user_type == '1':
+                self.vip_approve(user_id)
+                driver.driver.refresh()
+
+                self.new_user()
         driver.type(self.CZJE, money)
         try:
             driver.type(self.BK_CARD, bank_card)
@@ -155,6 +171,7 @@ class Qbb_Front(BasePage):
         :param bank_num: 选择提现银行卡
         :param money: 提现金额
         :param ts_pwd: 交易密码
+        :param result: 交易结果
         :return:
         '''
         driver = self.basepage
@@ -198,7 +215,7 @@ class Qbb_Front(BasePage):
         '''
         driver = self.basepage
         driver.driver.refresh()
-        driver.click('indexTo')
+        evaluation = self.get_basics.judge_user(self.login_hj(), self.login_id())
         if bid is not None:
             if hj == 'test':
                 driver.navigate(self.CS_BID_URL % bid)
@@ -207,26 +224,33 @@ class Qbb_Front(BasePage):
             else:
                 driver.navigate(self.BID_URL % bid)
         else:
+            driver.click('indexTo')
             driver.sleep(3)
             driver.move_to(self.MV_CKGD)
             if bid_title is not None:
                 driver.open_new_window(self.BID_TITLE % bid_title)
             driver.move_to(self.TZLB % 1)
             driver.open_new_window(self.TZLB % 1)
-        driver.type(self.TZJE, money)
-        if len(str(ts_pwd)) <= 5:
-            print('This ts_pwd is error')
-        else:
-            driver.click(self.SD_PWD)
-            driver.type(self.TS_PWD, ts_pwd)
-        driver.click(self.C_TSS)
+        if evaluation[1] == 0:
+            self.investment_operation(money, ts_pwd)
+            driver.click(self.C_LJCP)
+            self.new_user()
+        if evaluation[0] == 0:
+            self.investment_operation(money, ts_pwd)
+            driver.click(self.C_LJCJ)
+            self.invest_read()
+        driver.sleep(2)
+        self.investment_operation(money, ts_pwd)
         driver.click(self.C_LJCJ)
         driver.click(self.C_CJJL)
 
     def new_user(self):
         """新用户风险测评"""
         driver = self.basepage
-        driver.click('toFxTest')
+        try:
+            driver.click('toFxTest')
+        except Exception:
+            pass
         driver.sleep(2)
         for i in range(1, 11):
             l = driver.get_elements('x,//*[@id="q_%d"]/label/input' % i)
@@ -241,22 +265,81 @@ class Qbb_Front(BasePage):
         driver.click('contiRead')
         driver.click('agreeRead')
 
+    def login_id(self):
+        """
+        获取登录用户user_id
+        :return:
+        """
+        driver = self.basepage
+        ele = driver.get_element('x,//*[@id="_f1"]/div[1]/div/div[2]/ul/li[1]/a[1]')
+        ele = ele.text
+        user_name = ele.split('，')[1]
+        user_id = self.get_basics.get_user_id(self.login_hj(), user_name)
+        return user_id
+
+    def login_hj(self):
+        """
+        获取登录环境
+        :return:
+        """
+        driver = self.basepage
+        url = driver.get_url()
+        hj = None
+        if '135' in url.split('/')[2]:
+            hj = 'pre'
+        elif '31' in url.split('/')[2]:
+            hj = 'test'
+        return hj
+
+    def in_station_phone(self):
+        """
+        获取手机号码
+        :return:
+        """
+        print(self.login_hj(), self.login_id)
+        pa_phone = self.get_basics.get_pa_phone(self.login_hj(), self.login_id())
+        return pa_phone
+
+    def investment_operation(self, money, ts_pwd):
+        driver = self.basepage
+        driver.type(self.TZJE, money)
+        if len(str(ts_pwd)) <= 5:
+            print('This ts_pwd is error')
+        else:
+            driver.click(self.SD_PWD)
+            driver.type(self.TS_PWD, ts_pwd)
+        driver.click(self.C_TSS)
+
+    def capture_text(self, selector):
+        driver = self.basepage
+        try:
+            text = driver.get_text(selector)
+            return text
+        except Exception:
+            print("No elements found")
+            return False
+
+
 if __name__ == '__main__':
-    CS_URL = 'http://192.168.10.31:8080/logout.html'
-    driver = WebBaseDriver("Chrome")
-    card = 6222000200124846333
-    qd = Qbb_Front(driver)
-    driver.implicitly_wai(5)
-    driver.maximize_window()
-    money = 200
-    bid = 20180509000359
-    qd.login(CS_URL, '322277qbb', '654321')
-    ####################################################
-    qd.recharge(200, 'pass', 'new1', bank_card=card)
-    # qd.withdraw(1, money, '654321', 'pass1')
-    # qd.qbb_register_tzr(15173125421, 'test', 'a1234567', 'a1234567')
-    # qd.bid_investment(money, 'PRO', '654321', bid=bid)
-    # qd.new_user()
-    # qd.invest_read()
-    driver.sleep(10)
-    driver.quit_browser()
+    # CS_URL = 'http://192.168.10.31:8080/logout.html'
+    # driver = WebBaseDriver("Chrome")
+    # card = 6222000200124846333
+    # qd = Qbb_Front(driver)
+    # driver.implicitly_wai(5)
+    # driver.maximize_window()
+    # money = 200
+    # bid = 20180509000359
+    # qd.login(CS_URL, '322277qbb', '654321')
+    # ####################################################
+    # qd.recharge(200, 'pass', 'new1', bank_card=card)
+    # # qd.withdraw(1, money, '654321', 'pass1')
+    # # qd.qbb_register_tzr(15173125421, 'test', 'a1234567', 'a1234567')
+    # # qd.bid_investment(money, 'PRO', '654321', bid=bid)
+    # # qd.new_user()
+    # # qd.invest_read()
+    # driver.sleep(10)
+    # driver.quit_browser()
+    status = 1
+    # while status == 1:
+    #     #     if i == 2:
+    #     #         status = 0
