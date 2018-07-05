@@ -1,6 +1,8 @@
-import random
+import json
+
+from Base.Id_card import *
 import string
-import requests, re
+import requests
 from Base.Connect_mysql import ConnectMysql
 
 
@@ -12,8 +14,11 @@ class Basics:
     pa_user_phone = "SELECT pa_user_phone  FROM cnp_user  WHERE user_id =%r ;"
     dx_yzm = "SELECT reserve from sys_sms_mt mt WHERE mt.mobile =%s ORDER BY create_time DESC LIMIT 1;"
     user_accredit = "SELECT pa_authflag FROM cnp_user  WHERE user_id = %r;"
+    sql = '''SELECT context FROM bid_receive_info WHERE borrow_sq = %s;'''
     ##########################################
     user_update = "UPDATE cnp_user SET user_name = '%rqbb', login_pwd = '3e9a73fac9a7b2477589161a7d0f960c', tran_pwd = '3e9a73fac9a7b2477589161a7d0f960c' WHERE user_id = %r;"
+    vip_up_card = "UPDATE cnp_user_vip SET idcard=%s, vip_name='%s' WHERE user_id=%r;"
+    sql1 = '''UPDATE bid_receive_info SET context=%r ,status=0 WHERE borrow_sq = %d;'''
     ###########################################
     hy_id_sql = "SELECT luckcd,userId,relevanceId FROM l_prize_log WHERE  relevanceId=(SELECT user_id from cnp_user WHERE user_phone=%d) and  functp='hy' ;"
     hy_chance_sql = "SELECT functp,luckcd,typeName,userId,relevanceId FROM l_prize_log WHERE  relevanceId=(SELECT user_id from cnp_user WHERE user_phone=%d) and  functp!='hy' ;"
@@ -38,6 +43,36 @@ class Basics:
         html = http_response.text
         out = re.split('<td>(.*)</td>', html)
         return out[9]
+
+    def scheduler_zx(self, hj, id):
+        """定时器执行"""
+        if hj == 31:
+            url = "http://192.168.10.31:8078/scheduler/runnow.action"
+        else:
+            url = "http://192.168.10.149:8078/scheduler/runnow.action"
+        http_response = requests.post(url + '?id=' + str(id) + '', headers=self.headers)
+        html = http_response.text
+        html = json.loads(html)
+        msg = html["message"]
+        if msg == "执行成功":
+            print('%d 执行成功' % id)
+        else:
+            print('%d 执行成功' % id)
+
+    def scheduler_core_zx(self, hj, id):
+        """定时器执行"""
+        if hj == 31:
+            url = "http://192.168.10.31:8078/scheduler/runnow.action"
+        else:
+            url = "http://192.168.10.149:8078/scheduler/runnow.action"
+        http_response = requests.post(url + '?id=' + str(id) + '', headers=self.headers)
+        html = http_response.text
+        html = json.loads(html)
+        msg = html["message"]
+        if msg == 1:
+            print('%d 执行成功' % id)
+        else:
+            print('%d 执行成功' % id)
 
     def get_pa_phone(self, hj, user):
         """获取平安手机"""
@@ -98,16 +133,31 @@ class Basics:
         self.Cn_db.disconnectDB()
         print("更新用户信息成功")
 
+    def bid_info_alter(self, db, bid, user_name, user_phone):
+        """修改合作商借款人"""
+        old_text = self.Cn_db.connect_db(db, self.sql % bid)
+        now_text = json.loads(old_text[0][0])
+        now_text["borrow_username"] = "%s" % user_name
+        now_text["user_phone"] = "%s" % user_phone
+        now_text = json.dumps(now_text)
+        self.Cn_db.connect_db('pre', self.sql1 % (now_text, bid))
+        self.Cn_db.commitDB()
+        self.Cn_db.disconnectDB()
+        print('修改成功')
+
     def vip_approve(self, result, database, user_id):
-        if result == "您尚未认证VIP，请先认证.":
+        """vip认证"""
+        if "认证" in result:
+            id_card = get_id_card()
+            user_name = get_user_name()
             user_vip1 = ("set @vipID='';")
             user_vip2 = ("call pkg_getseq('userVip_sq',DATE_FORMAT(now(),'%Y%m%d'),@vipID,@i,@j);")
             user_vip3 = """ insert into user_vip_init (vip_id, user_id, create_time, vip_name, exam_id, iden_time, over_time, card_type, idcard, posi_path, nega_path, face_path, channel)   
-                        values ( @vipID, """ + str(user_id) + """, '2017-01-04 09:58:59', '测试', null, null, null, 1, '123456199504040404', 'vipImages/20170104/posi_1483494474876.jpg', 
+                        values ( @vipID, """ + str(user_id) + """, SYSDATE(), '""" + str(user_name) + """', null, null, null, 1, '""" + str(id_card) + """', 'vipImages/20170104/posi_1483494474876.jpg', 
                         'vipImages/20170104/nega_1483494481917.jpg', 'vipImages/20170104/face_1483494483794.jpg', 'WEB');"""
             user_vip4 = """insert into cnp_user_vip (vip_id, user_id, create_time, vip_name, recruitment, domicile, status, exam_id, iden_time, over_time, card_type,idcard, 
                         posi_path, nega_path, face_path, channel, vip_count, remark)   
-                        values (@vipID, """ + str(user_id) + """, '2017-01-04 09:48:10', '测试', null, null, 1, null, null, null, 1, '123456199504040404',
+                        values (@vipID, """ + str(user_id) + """, SYSDATE(), '""" + str(user_name) + """', null, null, 1, null, null, null, 1, '""" + str(id_card) + """',
                          'vipImages/20170104/posi_1483494474876.jpg', 'vipImages/20170104/nega_1483494481917.jpg', 'vipImages/20170104/face_1483494483794.jpg', 'WEB', 1, null);"""
             self.Cn_db.connect_db(database, user_vip1)
             self.Cn_db.mysql_cursor.execute(user_vip2)
@@ -119,13 +169,23 @@ class Basics:
         else:
             print("已vip认证，或者没有找到元素")
 
+    def vip_update(self,  database, user_id):
+        id_card = get_id_card()
+        user_name = get_user_name()
+        self.Cn_db.connect_db(database, self.vip_up_card % (id_card, user_name, user_id))
+        self.Cn_db.commitDB()
+        self.Cn_db.disconnectDB()
+        print('修改证件号码成功')
+
+
+
 
 if __name__ == '__main__':
     qb = Basics()
     user_name2 = 'qbb3228439010'
-    jh = 'test'
+    jh = 'pre'
     user_phone2 = 13424523235
-    result2 = "您尚未认证VIP，请先认证."
+    # qb.scheduler_zx(jh, 41)
     # status = qb.judge_user(jh, user_id)
     # print(status[0])
     # phone = qb.get_pa_phone(jh, user_id)
@@ -135,4 +195,5 @@ if __name__ == '__main__':
     # print(aa)
     # user_id = qb.get_user_id(jh, user_phone=13424523235)
     # qb.new_user_update(jh, user_id)
-    qb.vip_approve(result2, jh, 382325)
+    result2 = '认证'
+    qb.vip_update(jh, 322289)

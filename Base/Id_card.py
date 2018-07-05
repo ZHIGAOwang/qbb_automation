@@ -537,6 +537,14 @@ area_dict = {'451381': '合山市', '542336': '聂拉木县', '320902': '亭湖�
              '640500': '中卫市', '430382': '韶山市', '440307': '龙岗区', '110101': '东城区', '440823': '遂溪县', '230321': '鸡东县'}
 id_code_list = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
 check_code_list = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2]
+last_names = ['赵', '钱', '孙', '李', '周', '吴', '郑', '王', '冯', '陈', '褚', '卫', '蒋', '沈', '韩', '杨', '朱', '秦', '尤', '许',
+              '姚', '邵', '堪', '汪', '祁', '毛', '禹', '狄', '米', '贝', '明', '臧', '计', '伏', '成', '戴', '谈', '宋', '茅', '庞',
+              '熊', '纪', '舒', '屈', '项', '祝', '董', '梁']
+first_names = ['的', '一', '是', '了', '我', '不', '人', '在', '他', '有', '这', '个', '上', '们', '来', '到', '时', '大', '地', '为',
+               '子', '中', '你', '说', '生', '国', '年', '着', '就', '那', '和', '要', '她', '出', '也', '得', '里', '后', '自', '以',
+               '乾', '坤', '']
+age = (random.randint(18, 50))
+area_code = random.choice(["141102", "451381", "511132", "230422", "320804", "640402", "420107"])
 
 
 def is_id_card(id_number):
@@ -571,9 +579,16 @@ def gen_id_card(area_code, age, gender):
     return result + str(check_code_list[sum([a * b for a, b in zip(id_code_list, [int(a) for a in result])]) % 11])
 
 
+def get_id_card():
+    id_number = gen_id_card(int(area_code), age, 1)
+    return id_number
+
+
+def get_user_name():
+    name = random.choice(last_names) + random.choice(first_names) + random.choice(first_names)
+    return name
+
+
 if __name__ == "__main__":
-    # area_code = random.choice(["141102", "451381", "511132", "230422", "320804", "640402", "420107"])
-    # id_number = gen_id_card(int(area_code), 22, 1)
-    # print(id_number)
-    # print(is_id_card(id_number))
-    print(random.randint(18, 50))
+    aa = get_id_card()
+    print(get_user_name())

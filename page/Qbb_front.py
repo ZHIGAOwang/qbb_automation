@@ -99,6 +99,9 @@ class Qbb_Front(BasePage):
             user_id = self.get_basics.get_user_id(self.login_hj(), user_phone=user_phone)
             print("手机号码:%s 注册成功,user_id:%r" % (user_phone, user_id))
             self.get_basics.new_user_update(self.login_hj(), user_id)
+            driver.sleep(1)
+            driver.move_to('l,进入会员中心')
+            driver.click('l,进入会员中心')
             return user_id
         else:
             print("注册失败")
@@ -121,7 +124,7 @@ class Qbb_Front(BasePage):
         driver.type('password', user_pwd)
         driver.click('l,立即登录')
         driver.sleep(2)
-        driver.navigate(dl_url.split('/l')[0])
+        # driver.navigate(dl_url.split('/l')[0])
 
     def recharge(self, money, result,  bank_card=0):
         """
@@ -138,13 +141,13 @@ class Qbb_Front(BasePage):
         user_id = self.login_id()
         evaluation = self.get_basics.judge_user(self.login_hj(), user_id)
         user_type = self.get_basics.get_user_class(self.login_hj(), user_id)
+        ele_text = self.capture_text('vipText')
         if evaluation[1] == 0:
             if user_type == '2':
-                self.vip_approve(user_id)
+                self.get_basics.vip_approve(ele_text, self.login_hj(), user_id)
             elif user_type == '1':
-                self.vip_approve(user_id)
+                self.get_basics.vip_approve(ele_text, self.login_hj(), user_id)
                 driver.driver.refresh()
-
                 self.new_user()
         driver.type(self.CZJE, money)
         try:
@@ -291,13 +294,13 @@ class Qbb_Front(BasePage):
             hj = 'test'
         return hj
 
-    def in_station_phone(self):
+    def in_station_phone(self, login_hj, login_id):
         """
         获取手机号码
         :return:
         """
         print(self.login_hj(), self.login_id)
-        pa_phone = self.get_basics.get_pa_phone(self.login_hj(), self.login_id())
+        pa_phone = self.get_basics.get_pa_phone(login_hj, login_id)
         return pa_phone
 
     def investment_operation(self, money, ts_pwd):
@@ -316,7 +319,6 @@ class Qbb_Front(BasePage):
             text = driver.get_text(selector)
             return text
         except Exception:
-            print("No elements found")
             return False
 
 

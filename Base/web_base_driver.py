@@ -131,6 +131,11 @@ class WebBaseDriver(object):
         '''确定alert框'''
         self.driver.switch_to_alert().accept()
 
+    def alert_text(self):
+        """alert框的文本信息"""
+        text = self.driver.switch_to_alert().text
+        return text
+
     def dismiss_alert(self):
         '''取消alert框'''
         self.driver.switch_to_alert().dismiss()
