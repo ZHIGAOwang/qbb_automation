@@ -1,7 +1,11 @@
+import datetime
+
 from Base.Connect_mysql import ConnectMysql
 from selenium.webdriver.common.keys import Keys
 from Base.web_base_driver import WebBaseDriver
+from page.Basics import Basics
 from page.Qbb_front import Qbb_Front
+import time
 
 
 class Admin(Qbb_Front):
@@ -55,6 +59,7 @@ class Admin(Qbb_Front):
                 sh_frame = 'frm_tree_359_a'
         else:
             print("请输入正确的审核")
+        d.sleep(1)
         d.click(sh_id)
         d.sleep(1)
         d.switch_to_frame(sh_frame)
@@ -71,22 +76,57 @@ class Admin(Qbb_Front):
             d.switch_to_parent_frame()
             return True
         else:
-            print(text)
-            return False
+            d.quit_browser()
+            raise TypeError(text)
+
+    def sql_wait(self, wait_type, db_name, bid):
+        judge = True
+        bor_sql = None
+        result = None
+        qb = Basics()
+        n = 0
+        if wait_type == 41:
+            result = "1"
+            bor_sql = "SELECT `status`,remark FROM bid_receive_info WHERE borrow_sq = %s ;" % bid
+        elif wait_type == 51:
+            bor_sql = "SELECT `status` from	bid_borrow WHERE  borrow_sq=%s ;" % bid
+            result = "07"
+        elif wait_type == 34:
+            bor_sql = "SELECT `status` from	bid_borrow WHERE  borrow_sq=%s ;" % bid
+            result = "11"
+        while judge:
+            qb.scheduler_zx(db_name, wait_type)
+            print(datetime.datetime.now())
+            time.sleep(30)
+            n += 1
+            sql_result = self.Cn_db.connect_db(db_name, bor_sql)
+            sql_result = sql_result[0]
+            self.Cn_db.disconnectDB()
+            if sql_result[0] == result:
+                judge = False
+                print("%d成功" % wait_type)
+            elif sql_result[0] == 3:
+                self.Cn_db.disconnectDB()
+                raise TypeError(sql_result[1])
+            print("%d数据库查询%d次" % (wait_type, n), datetime.datetime.now())
 
 
 if __name__ == '__main__':
-    driver = WebBaseDriver("Chrome")
-    ad = Admin(driver)
-    driver.implicitly_wai(5)
-    driver.maximize_window()
-    hj = 135
-    sh1 = "181"
-    sh2 = "184"
-    bid = 20180703000003
-    ad.admin_login(hj)
-    ad.enter_bid_sh(hj)
-    ad.bid_sh(sh1, hj, bid)
-    ad.bid_sh(sh2, hj, bid)
-    driver.sleep(10)
-    driver.quit_browser()
+    # driver = WebBaseDriver("Chrome")
+    # ad = Admin(driver)
+    # driver.implicitly_wai(5)
+    # driver.maximize_window()
+    # hj = 135
+    # sh1 = "181"
+    # sh2 = "184"
+    # bid = 20180703000003
+    # ad.admin_login(hj)
+    # ad.enter_bid_sh(hj)
+    # ad.bid_sh(sh1, hj, bid)
+    # ad.bid_sh(sh2, hj, bid)
+    # driver.sleep(10)
+    # driver.quit_browser()
+    time_stamp = datetime.datetime.now()
+    print(time_stamp)
+    time = time_stamp.strftime('%Y-%m-%d %H:%M:%S')
+    print(time)

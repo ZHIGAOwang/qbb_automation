@@ -4,7 +4,7 @@ import pymysql
 class ConnectMysql(object):
 
     def connect_db(slef, db_name, sql):
-        if db_name == 'test':
+        if db_name == 'test' or db_name == 31:
               slef.mysql_connect = pymysql.connect(host='192.168.10.36',
                                                user='db_test',
                                                passwd='TEST788qbb',
@@ -16,7 +16,7 @@ class ConnectMysql(object):
               sql_data =slef.mysql_cursor.fetchall()
               return  sql_data
 
-        elif db_name == 'pre':
+        elif db_name == 'pre' or db_name == 135:
             slef.mysql_connect = pymysql.connect(host='192.168.10.26',
                                               user='db_test',
                                               passwd='TEST788qbb',
@@ -40,7 +40,6 @@ class ConnectMysql(object):
 
 if __name__ == '__main__':
     Cndb=ConnectMysql()
-    sql = "SELECT *, mt.content FROM sys_sms_mt mt WHERE mt.mobile = 15173125421;"
-    print(Cndb.connect_db('pre',sql))
+    # sql = "SELECT *, mt.content FROM sys_sms_mt mt WHERE mt.mobile = 15173125421;"
+    # print(Cndb.connect_db('pre',sql))
     Cndb.disconnectDB()
-

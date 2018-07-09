@@ -57,7 +57,8 @@ class Qbb_Pafront(Qbb_Front):
         if ele_text is not False:
             if user_id is None:
                 self.get_basics.vip_approve(ele_text, self.login_hj(), self.login_id())
-            self.get_basics.vip_approve(ele_text, self.login_hj(), user_id)
+            # else:
+            #     self.get_basics.vip_approve(ele_text, self.login_hj(), user_id)
             d.driver.refresh()
             d.click(self.C_KTCG)
         d.sleep(1)
@@ -102,16 +103,15 @@ class Qbb_Pafront(Qbb_Front):
         login_id = self.login_id()
         login_hj = self.login_hj()
         driver.click(self.C_LJCZ)
-        try:
-            driver.click(self.C_CGZH)
-        except Exception:
-            pass
-
         user_id = self.login_id()
         hj = self.login_hj()
         evaluation = self.get_basics.judge_user(hj, user_id)
         user_type = self.get_basics.get_user_class(hj, user_id)
         if evaluation[1] == 0:
+            try:
+                driver.click(self.C_CGZH)
+            except Exception:
+                pass
             driver.type(self.CZJE, money)
             if user_type == '2':
                 try:
@@ -129,6 +129,10 @@ class Qbb_Pafront(Qbb_Front):
                 except Exception:
                     pass
                 self.new_user()
+        try:
+            driver.click(self.C_CGZH)
+        except Exception:
+            pass
         driver.type(self.CZJE, money)
         now_handle = driver.current_window_handle()
         driver.open_new_window(self.C_MSCZ)
@@ -221,7 +225,9 @@ class Qbb_Pafront(Qbb_Front):
         '''
         driver = self.basepage
         driver.driver.refresh()
-        evaluation = self.get_basics.judge_user(self.login_hj(), self.login_id())
+        login_hj = self.login_hj()
+        login_id = self.login_id()
+        evaluation = self.get_basics.judge_user(login_hj, login_id)
         if bid is not None:
             if hj == 'test':
                 driver.navigate(self.CS_BID_URL % bid)
@@ -248,10 +254,10 @@ class Qbb_Pafront(Qbb_Front):
         self.pa_invest_operation(money)
         driver.click(self.C_LJCJ)
         driver.click(self.C_HQYZM)
-        pa_phone = self.get_basics.get_pa_phone(self.login_hj(), self.login_id())
+        pa_phone = self.get_basics.get_pa_phone(login_hj, login_id)
         driver.type(self.TX_YZM, self.get_basics.get_yzm(pa_phone))
         driver.type(self.PA_TS_PWD, pa_ts_pwd)
-        driver.click(self.C_DJ)
+        driver.click(self.C_QD)
 
     def pa_first_recharge(self):
         """

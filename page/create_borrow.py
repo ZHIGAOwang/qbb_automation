@@ -1,3 +1,5 @@
+import random
+
 from Base import Connect_mysql, get_date
 
 
@@ -21,17 +23,17 @@ def create_borrow(hj, is_host, bid_money):
         bid_code = '014'
         item_type = '42'
     #6.借款人姓名 测试企借-275044 个人-311171 |准生产 存管个人-380455 企业-380450 托管-270001qbb  132qbb
-    if connect == 1:
+    if connect == 31:
         borrow_username = '333382qbb'
         name = '依依'
-    elif connect == 2:
+    elif connect == 135:
         borrow_username = '322289qbb'
         name = '兮兮'
     #7.借款金额
     borrow_money = bid_money
     #8.借款期限 D-借款期限为[天]选择此项 M-借款期限为[月]时选择此项
     limit_type = 'M'
-    borrow_limit = 5
+    borrow_limit = random.randint(1, 12)
     limit_day = 1
     #9。借款开始时间与结束时间
     begin_date = get_date.today()
@@ -88,18 +90,27 @@ def create_borrow(hj, is_host, bid_money):
             NULL,
             NULL
         );'''
-    if connect == 1:
-        Cndb.connect_db('test',sql)
+    if connect == 31:
+        Cndb.connect_db('test', sql)
+        Cndb.mysql_cursor.execute("""SELECT @borrow_sq;""")
+        borrow_sq = Cndb.mysql_cursor.fetchall()
         print('连接测试环境')
         Cndb.mysql_cursor.execute(insert, (bid_code,))
         Cndb.commitDB()
-    elif connect == 2:
+    elif connect == 135:
         Cndb.connect_db('pre', sql)
+        Cndb.mysql_cursor.execute("""SELECT @borrow_sq;""")
+        borrow_sq = Cndb.mysql_cursor.fetchall()
         print('连接准生产环境')
         Cndb.mysql_cursor.execute(insert, (bid_code,))
         Cndb.commitDB()
     else:
         raise TypeError('1-测试，2-准生产')
-
     Cndb.disconnectDB()
     print('新增标的成功！')
+    return borrow_sq[0][0]
+
+
+if __name__ == '__main__':
+    br_sql = create_borrow(31, 0, 1000)
+    print(br_sql)

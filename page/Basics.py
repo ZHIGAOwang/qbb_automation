@@ -1,5 +1,4 @@
 import json
-
 from Base.Id_card import *
 import string
 import requests
@@ -15,10 +14,12 @@ class Basics:
     dx_yzm = "SELECT reserve from sys_sms_mt mt WHERE mt.mobile =%s ORDER BY create_time DESC LIMIT 1;"
     user_accredit = "SELECT pa_authflag FROM cnp_user  WHERE user_id = %r;"
     sql = '''SELECT context FROM bid_receive_info WHERE borrow_sq = %s;'''
+    limit_get = "SELECT limit_type,borrow_limit,limit_day from bid_borrow WHERE borrow_sq = %s;"
     ##########################################
     user_update = "UPDATE cnp_user SET user_name = '%rqbb', login_pwd = '3e9a73fac9a7b2477589161a7d0f960c', tran_pwd = '3e9a73fac9a7b2477589161a7d0f960c' WHERE user_id = %r;"
     vip_up_card = "UPDATE cnp_user_vip SET idcard=%s, vip_name='%s' WHERE user_id=%r;"
     sql1 = '''UPDATE bid_receive_info SET context=%r ,status=0 WHERE borrow_sq = %d;'''
+    bid_up = "SELECT borrow_sq FROM bid_borrow WHERE borrow_sq != %s and	is_hosting=%s  AND `status`>=5 AND `status`<=11 and product_type=%d and borrow_limit>%d borrow_limit<=%d;"
     ###########################################
     hy_id_sql = "SELECT luckcd,userId,relevanceId FROM l_prize_log WHERE  relevanceId=(SELECT user_id from cnp_user WHERE user_phone=%d) and  functp='hy' ;"
     hy_chance_sql = "SELECT functp,luckcd,typeName,userId,relevanceId FROM l_prize_log WHERE  relevanceId=(SELECT user_id from cnp_user WHERE user_phone=%d) and  functp!='hy' ;"
@@ -46,7 +47,7 @@ class Basics:
 
     def scheduler_zx(self, hj, id):
         """定时器执行"""
-        if hj == 31:
+        if hj == 31 or hj == 'test':
             url = "http://192.168.10.31:8078/scheduler/runnow.action"
         else:
             url = "http://192.168.10.149:8078/scheduler/runnow.action"
@@ -54,25 +55,30 @@ class Basics:
         html = http_response.text
         html = json.loads(html)
         msg = html["message"]
+        time_stamp = datetime.now()
+        time = time_stamp.strftime('%Y-%m-%d %H:%M:%S')
         if msg == "执行成功":
-            print('%d 执行成功' % id)
+            print('%d定时器执行成功' % id, time)
         else:
-            print('%d 执行成功' % id)
+            print('%d定时器执行失败,%s' % (id, html["message"]))
 
     def scheduler_core_zx(self, hj, id):
         """定时器执行"""
-        if hj == 31:
+        if hj == 31 or hj == 'test':
             url = "http://192.168.10.31:8078/scheduler/runnow.action"
         else:
-            url = "http://192.168.10.149:8078/scheduler/runnow.action"
+            url = "http://192.168.10.149:8092/scheduler/runnow.action"
+            print(1)
         http_response = requests.post(url + '?id=' + str(id) + '', headers=self.headers)
         html = http_response.text
         html = json.loads(html)
+        time_stamp = datetime.now()
+        time = time_stamp.strftime('%Y-%m-%d %H:%M:%S')
         msg = html["message"]
-        if msg == 1:
-            print('%d 执行成功' % id)
+        if msg == "执行成功":
+            print('%d定时器执行成功' % id, time)
         else:
-            print('%d 执行成功' % id)
+            print('%d定时器执行失败,%s' % (id, html["message"]))
 
     def get_pa_phone(self, hj, user):
         """获取平安手机"""
@@ -128,6 +134,7 @@ class Basics:
 
     def new_user_update(self, database, user_id):
         """更新用户信息"""
+        print(user_id)
         self.Cn_db.connect_db(database, self.user_update % (user_id, user_id))
         self.Cn_db.commitDB()
         self.Cn_db.disconnectDB()
@@ -177,15 +184,32 @@ class Basics:
         self.Cn_db.disconnectDB()
         print('修改证件号码成功')
 
-
+    def bid_update(self, database, bid):
+        limit = self.Cn_db.connect_db(database, self.limit_get % bid)
+        self.Cn_db.disconnectDB()
+        limit = limit[0]
+        if limit[0] == "M":
+            if limit[1] <= 3:
+                pass
+            elif limit[1] > 3 & limit[1] <= 6:
+                pass
+            elif limit[1] > 6 & limit[1] <= 12:
+                pass
+        elif limit[0] == "D":
+            if limit[1] <= 3:
+                pass
+            elif limit[1] > 3 & limit[1] <= 6:
+                pass
+            elif limit[1] > 6 & limit[1] <= 12:
+                pass
 
 
 if __name__ == '__main__':
     qb = Basics()
     user_name2 = 'qbb3228439010'
     jh = 'pre'
-    user_phone2 = 13424523235
-    # qb.scheduler_zx(jh, 41)
+    # user_phone2 = 13424523235
+    # qb.scheduler_zx(jh, 51)
     # status = qb.judge_user(jh, user_id)
     # print(status[0])
     # phone = qb.get_pa_phone(jh, user_id)
@@ -193,7 +217,8 @@ if __name__ == '__main__':
     # print(line)
     # aa = qb.get_dx_yzm(jh, 13573548692)
     # print(aa)
-    # user_id = qb.get_user_id(jh, user_phone=13424523235)
-    # qb.new_user_update(jh, user_id)
+    user_id = qb.get_user_id(jh, user_phone=15173125426)
+    qb.new_user_update(jh, user_id)
     result2 = '认证'
-    qb.vip_update(jh, 322289)
+    # qb.vip_update(jh, 426432)
+    # qb.vip_approve(result2, jh, 382356)
